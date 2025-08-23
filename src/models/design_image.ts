@@ -1,13 +1,12 @@
-export class Design_image {
-    id: number;
-    design_id: string // not nullable // index
-    url: string // not null
-    created_at: Date
+import { assign } from 'lodash';
 
-    constructor(data: any){
-        this.id = data.id;
-        this.design_id = data.design_id // not nullable // index
-        this.url = data.url // not null
-        this.created_at = data.created_at
+export class DesignImage {
+    id: number;
+    design_id: string; // not nullable // index
+    url: string; // not null
+    created_at: Date;
+
+    constructor(data?: Partial<DesignImage>) {
+        assign(this, { created_at: new Date() } as DesignImage, data);
     }
 }

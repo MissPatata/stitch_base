@@ -1,11 +1,11 @@
-export class Pattern_to_design {
+import { assign } from 'lodash';
+
+export class PatternToDesign {
     pattern_id: string;
     design_id: string;
-    created_at: Date
+    created_at: Date;
 
-    constructor(data: any){
-        this.pattern_id = data.pattern_id;
-        this.design_id = data.design_id;
-        this.created_at = data.created_at
-  }
+    constructor(data?: Partial<PatternToDesign>) {
+        assign(this, { created_at: new Date() } as PatternToDesign, data);
+    }
 }

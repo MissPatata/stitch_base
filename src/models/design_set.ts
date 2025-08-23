@@ -1,17 +1,18 @@
-export class Design_set{
+import { assign } from 'lodash';
+
+export class DesignSet {
     id: number;
     name: string; // not null
     description: string;
     tags: string[];
-    created_at: Date// auto
-    updated_at: Date
+    created_at: Date; // auto
+    updated_at: Date;
 
-    constructor(data: any){
-        this.id = data.id;
-        this.name = data.name; // not null
-        this.description = data.description;
-        this.tags = data.tags;
-        this.created_at = data.created_at// auto
-        this.updated_at = data.updated_at
+    constructor(data?: Partial<DesignSet>) {
+        assign(
+            this,
+            { created_at: new Date(), updated_at: new Date() } as DesignSet,
+            data,
+        );
     }
 }
