@@ -1,34 +1,51 @@
 {
-  "name": "stitch_base",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "lodash": "^4.17.21",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1"
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.33.0",
-    "@types/lodash": "^4.17.20",
-    "@types/react": "^19.1.10",
-    "@types/react-dom": "^19.1.7",
-    "@vitejs/plugin-react": "^5.0.0",
-    "eslint": "^9.33.0",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-prettier": "^5.5.4",
-    "eslint-plugin-react-hooks": "^5.2.0",
-    "eslint-plugin-react-refresh": "^0.4.20",
-    "globals": "^16.3.0",
-    "prettier": "^3.6.2",
-    "typescript": "~5.8.3",
-    "typescript-eslint": "^8.39.1",
-    "vite": "^7.1.2"
-  }
+    "name": "stitch_base",
+    "private": true,
+    "version": "0.0.0",
+    "type": "commonjs",
+    "scripts": {
+        "dev": "npm run db:startup && vite",
+        "build": "npm run db:startup && tsc -b && vite build",
+        "lint": "eslint .",
+        "preview": "npm run db:startup && vite preview",
+        "db:startup": "ts-node src/db/startup.ts",
+        "db:init": "ts-node src/db/init-production.ts",
+        "db:test": "ts-node src/db/test/mikro-orm.spec.ts",
+        "test": "jest",
+        "test:watch": "jest --watch"
+    },
+    "dependencies": {
+        "@mikro-orm/core": "^6.4.16",
+        "@mikro-orm/reflection": "^6.4.16",
+        "@mikro-orm/sqlite": "^6.4.16",
+        "lodash": "^4.17.21",
+        "mikro-orm": "^6.4.16",
+        "nanoid": "^3.3.11",
+        "react": "^19.1.1",
+        "react-dom": "^19.1.1",
+        "reflect-metadata": "^0.2.2"
+    },
+    "devDependencies": {
+        "@eslint/js": "^9.33.0",
+        "@types/jest": "^30.0.0",
+        "@types/lodash": "^4.17.20",
+        "@types/node": "^24.3.0",
+        "@types/react": "^19.1.10",
+        "@types/react-dom": "^19.1.7",
+        "@vitejs/plugin-react": "^5.0.0",
+        "eslint": "^9.33.0",
+        "eslint-config-prettier": "^10.1.8",
+        "eslint-plugin-prettier": "^5.5.4",
+        "eslint-plugin-react-hooks": "^5.2.0",
+        "eslint-plugin-react-refresh": "^0.4.20",
+        "globals": "^16.3.0",
+        "jest": "^30.0.5",
+        "prettier": "^3.6.2",
+        "ts-jest": "^29.4.1",
+        "ts-node": "^10.9.2",
+        "tsx": "^4.20.4",
+        "typescript": "~5.8.3",
+        "typescript-eslint": "^8.39.1",
+        "vite": "^7.1.2"
+    }
 }

@@ -23,6 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 
-
-git config --global user.name "MissPatata"
-git config --global user.email "miss.patata7@gmail.com"
+# Database files and directory (only the root db folder, not src/db)
+/db/
+*.db
+*.sqlite
+*.sqlite3
