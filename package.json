@@ -1,5 +1,5 @@
 {
-  "name": "fashion-designer-app",
+  "name": "stitch-base",
   "version": "0.1.0",
   "private": true,
   "main": "electron-dist/main.js",
@@ -119,6 +119,7 @@
     ],
     "mac": {
       "category": "public.app-category.productivity",
+      "icon": "public/icon.png",
       "target": [
         {
           "target": "dmg",
@@ -137,6 +138,7 @@
       ]
     },
     "win": {
+      "icon": "public/icon.png",
       "target": [
         {
           "target": "nsis",
@@ -154,6 +156,7 @@
       "signAndEditExecutable": false
     },
     "linux": {
+      "icon": "public/icon.png",
       "target": [
         "AppImage",
         "deb"
