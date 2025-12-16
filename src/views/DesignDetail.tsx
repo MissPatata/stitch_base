@@ -4,41 +4,15 @@ import { useI18n } from "../i18n/context";
 import { Button } from "../components/Button";
 import { Tag } from "../components/Tag";
 import { StatusPill } from "../components/StatusPill";
-import { useImageUrl } from "../hooks/useImageUrl";
+import { ImageGallery } from "../components/ImageGallery";
+import { ImageThumbnail } from "../components/ImageThumbnail";
 import { theme } from "../theme";
 import * as storage from "../storage";
-import type { DesignImageType } from "../types";
+import type { ImageType } from "../types";
+import { useImageUrl } from "../hooks/useImageUrl";
 
 interface DesignDetailProps {
   id: string;
-}
-
-function PreviewImage({
-  imagePath,
-  alt,
-  onClick,
-}: {
-  imagePath: string;
-  alt: string;
-  onClick: () => void;
-}) {
-  const imageUrl = useImageUrl(imagePath);
-  return (
-    <img
-      src={imageUrl}
-      alt={alt}
-      style={{
-        width: "100%",
-        height: "400px",
-        objectFit: "cover",
-        cursor: "pointer",
-      }}
-      onClick={onClick}
-      onError={(e) => {
-        (e.target as HTMLImageElement).src = "/placeholder.svg";
-      }}
-    />
-  );
 }
 
 function Lightbox({
@@ -201,9 +175,10 @@ export function DesignDetail({ id }: DesignDetailProps) {
                 boxShadow: theme.shadow.md,
               }}
             >
-              <PreviewImage
+              <ImageThumbnail
                 imagePath={previewImage.filePath}
                 alt={design.name}
+                height="400px"
                 onClick={() => setLightboxImage(previewImage.filePath)}
               />
             </div>
@@ -218,139 +193,29 @@ export function DesignDetail({ id }: DesignDetailProps) {
               boxShadow: theme.shadow.sm,
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: theme.spacing.md,
+            <ImageGallery
+              images={design.images}
+              onAddImages={handleAddImages}
+              onRemoveImage={async (imageId: string) => {
+                const image = design.images.find((img) => img.id === imageId);
+                if (image) {
+                  await storage.removeDesignImage(image);
+                  await updateDesign(id, {
+                    images: design.images.filter((img) => img.id !== imageId),
+                  });
+                }
               }}
-            >
-              <h2 style={{ margin: 0, fontSize: "1.25rem", fontWeight: "600" }}>
-                {t.designs.images}
-              </h2>
-              <Button size="sm" onClick={handleAddImages}>
-                + {t.designs.addImages}
-              </Button>
-            </div>
-
-            {design.images.length > 0 ? (
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
-                  gap: theme.spacing.md,
-                }}
-              >
-                {design.images.map((image) => {
-                  const handleChangeType = (newType: DesignImageType) => {
-                    const updatedImages = design.images.map((img) =>
-                      img.id === image.id ? { ...img, type: newType } : img
-                    );
-                    updateDesign(id, { images: updatedImages });
-                  };
-
-                  const ImageThumbnail = ({
-                    imagePath,
-                    alt,
-                  }: {
-                    imagePath: string;
-                    alt: string;
-                  }) => {
-                    const imageUrl = useImageUrl(imagePath);
-                    return (
-                      <div
-                        style={{
-                          position: "relative",
-                          cursor: "pointer",
-                          borderRadius: theme.borderRadius.md,
-                          overflow: "hidden",
-                        }}
-                        onClick={() => setLightboxImage(imagePath)}
-                      >
-                        <img
-                          src={imageUrl}
-                          alt={alt}
-                          style={{
-                            width: "100%",
-                            height: "150px",
-                            objectFit: "cover",
-                          }}
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src =
-                              "/placeholder.svg";
-                          }}
-                        />
-                      </div>
-                    );
-                  };
-
-                  return (
-                    <div
-                      key={image.id}
-                      style={{
-                        position: "relative",
-                        borderRadius: theme.borderRadius.md,
-                        overflow: "hidden",
-                        border: `1px solid ${theme.colors.border}`,
-                        backgroundColor: theme.colors.surface,
-                      }}
-                    >
-                      <ImageThumbnail
-                        imagePath={image.filePath}
-                        alt={t.imageTypes[image.type]}
-                      />
-                      <div
-                        style={{
-                          padding: theme.spacing.xs,
-                          borderTop: `1px solid ${theme.colors.border}`,
-                          backgroundColor: theme.colors.surface,
-                        }}
-                      >
-                        <label
-                          style={{
-                            display: "block",
-                            fontSize: "0.7rem",
-                            fontWeight: "600",
-                            color: theme.colors.textSecondary,
-                            marginBottom: theme.spacing.xs,
-                          }}
-                        >
-                          {t.designs.imageType || "Type"}:
-                        </label>
-                        <select
-                          value={image.type}
-                          onChange={(e) =>
-                            handleChangeType(e.target.value as DesignImageType)
-                          }
-                          onClick={(e) => e.stopPropagation()}
-                          style={{
-                            width: "100%",
-                            padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
-                            fontSize: "0.75rem",
-                            border: `1px solid ${theme.colors.border}`,
-                            borderRadius: theme.borderRadius.sm,
-                            backgroundColor: theme.colors.surface,
-                            color: theme.colors.textPrimary,
-                            cursor: "pointer",
-                          }}
-                        >
-                          {Object.keys(t.imageTypes).map((key) => (
-                            <option key={key} value={key}>
-                              {t.imageTypes[key as DesignImageType]}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <p style={{ color: theme.colors.textMuted }}>
-                {t.designs.noImages}
-              </p>
-            )}
+              onChangeImageType={(imageId: string, type: ImageType) => {
+                const updatedImages = design.images.map((img) =>
+                  img.id === imageId ? { ...img, type } : img
+                );
+                updateDesign(id, { images: updatedImages });
+              }}
+              onImageClick={(imagePath) => setLightboxImage(imagePath)}
+              imageTypeLabel={t.designs.images}
+              addButtonLabel={t.designs.addImages}
+              emptyMessage={t.designs.noImages}
+            />
           </div>
         </div>
 

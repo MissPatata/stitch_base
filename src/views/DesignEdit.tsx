@@ -4,7 +4,7 @@ import { useStore } from "../store";
 import { useI18n } from "../i18n/context";
 import { Button } from "../components/Button";
 import { Tag } from "../components/Tag";
-import { useImageUrl } from "../hooks/useImageUrl";
+import { ImageGallery } from "../components/ImageGallery";
 import { theme } from "../theme";
 import * as storage from "../storage";
 import type {
@@ -13,29 +13,11 @@ import type {
   LengthType,
   SleeveLengthType,
   ProcessStatus,
-  DesignImageType,
+  ImageType,
 } from "../types";
 
 interface DesignEditProps {
   id?: string;
-}
-
-function EditImageThumbnail({ imagePath }: { imagePath: string }) {
-  const imageUrl = useImageUrl(imagePath);
-  return (
-    <img
-      src={imageUrl}
-      alt="Design"
-      style={{
-        width: "100%",
-        height: "150px",
-        objectFit: "cover",
-      }}
-      onError={(e) => {
-        (e.target as HTMLImageElement).src = "/placeholder.svg";
-      }}
-    />
-  );
 }
 
 export function DesignEdit({ id }: DesignEditProps) {
@@ -103,7 +85,7 @@ export function DesignEdit({ id }: DesignEditProps) {
     }
   };
 
-  const handleChangeImageType = (imageId: string, type: DesignImageType) => {
+  const handleChangeImageType = (imageId: string, type: ImageType) => {
     setImages(
       images.map((img) => (img.id === imageId ? { ...img, type } : img))
     );
@@ -469,112 +451,15 @@ export function DesignEdit({ id }: DesignEditProps) {
           </div>
 
           {/* Images */}
-          <div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: theme.spacing.md,
-              }}
-            >
-              <label style={{ fontWeight: "600" }}>{t.designs.images}</label>
-              <Button type="button" size="sm" onClick={handleAddImages}>
-                + {t.designs.addImages}
-              </Button>
-            </div>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
-                gap: theme.spacing.md,
-              }}
-            >
-              {images.map((image) => (
-                <div
-                  key={image.id}
-                  style={{
-                    position: "relative",
-                    borderRadius: theme.borderRadius.md,
-                    overflow: "hidden",
-                    border: `1px solid ${theme.colors.border}`,
-                    backgroundColor: theme.colors.surface,
-                  }}
-                >
-                  <EditImageThumbnail imagePath={image.filePath} />
-                  <div
-                    style={{
-                      padding: theme.spacing.xs,
-                      borderTop: `1px solid ${theme.colors.border}`,
-                      backgroundColor: theme.colors.surface,
-                    }}
-                  >
-                    <label
-                      style={{
-                        display: "block",
-                        fontSize: "0.7rem",
-                        fontWeight: "600",
-                        color: theme.colors.textSecondary,
-                        marginBottom: theme.spacing.xs,
-                      }}
-                    >
-                      {t.designs.imageType || "Type"}:
-                    </label>
-                    <select
-                      value={image.type}
-                      onChange={(e) =>
-                        handleChangeImageType(
-                          image.id,
-                          e.target.value as DesignImageType
-                        )
-                      }
-                      style={{
-                        width: "100%",
-                        padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
-                        fontSize: "0.75rem",
-                        border: `1px solid ${theme.colors.border}`,
-                        borderRadius: theme.borderRadius.sm,
-                        backgroundColor: theme.colors.surface,
-                        color: theme.colors.textPrimary,
-                        cursor: "pointer",
-                      }}
-                    >
-                      {Object.keys(t.imageTypes).map((key) => (
-                        <option key={key} value={key}>
-                          {t.imageTypes[key as DesignImageType]}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <button
-                    onClick={() => handleRemoveImage(image.id)}
-                    style={{
-                      position: "absolute",
-                      top: theme.spacing.xs,
-                      right: theme.spacing.xs,
-                      backgroundColor: "rgba(255, 181, 181, 0.9)",
-                      color: theme.colors.textPrimary,
-                      border: "none",
-                      borderRadius: theme.borderRadius.sm,
-                      width: "24px",
-                      height: "24px",
-                      cursor: "pointer",
-                      fontWeight: "700",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "1rem",
-                      lineHeight: 1,
-                    }}
-                    title="Remove image"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
+          <ImageGallery
+            images={images}
+            onAddImages={handleAddImages}
+            onRemoveImage={handleRemoveImage}
+            onChangeImageType={handleChangeImageType}
+            imageTypeLabel={t.designs.images}
+            addButtonLabel={t.designs.addImages}
+            emptyMessage={t.designs.noImages}
+          />
 
           {/* Linked Patterns */}
           <div>

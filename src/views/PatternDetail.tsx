@@ -1,9 +1,13 @@
+import { useState } from "react";
 import { useStore } from "../store";
 import { useI18n } from "../i18n/context";
 import { Button } from "../components/Button";
 import { Tag } from "../components/Tag";
+import { ImageGallery } from "../components/ImageGallery";
+import { ImageThumbnail } from "../components/ImageThumbnail";
 import { theme } from "../theme";
 import * as storage from "../storage";
+import type { ImageType } from "../types";
 
 interface PatternDetailProps {
   id: string;
@@ -11,7 +15,9 @@ interface PatternDetailProps {
 
 export function PatternDetail({ id }: PatternDetailProps) {
   const { t } = useI18n();
-  const { patterns, designs, setView, deletePattern } = useStore();
+  const { patterns, designs, setView, deletePattern, updatePattern } =
+    useStore();
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
   const pattern = patterns.find((p) => p.id === id);
 
@@ -20,6 +26,9 @@ export function PatternDetail({ id }: PatternDetailProps) {
   }
 
   const usedInDesigns = designs.filter((d) => d.linkedPatternIds.includes(id));
+  const patternImages = pattern.images || [];
+  const previewImage =
+    patternImages.find((img) => img.type === "preview") || patternImages[0];
 
   const handleDelete = () => {
     if (window.confirm(t.common.confirmDelete)) {
@@ -43,11 +52,40 @@ export function PatternDetail({ id }: PatternDetailProps) {
     }
   };
 
+  const handleAddImages = async () => {
+    const files = await storage.selectImageFiles();
+    if (files) {
+      const newImages = await Promise.all(
+        files.map((file) => storage.savePatternImage(id, file, "process"))
+      );
+      await updatePattern(id, {
+        images: [...patternImages, ...newImages],
+      });
+    }
+  };
+
+  const handleRemoveImage = async (imageId: string) => {
+    const image = patternImages.find((img) => img.id === imageId);
+    if (image) {
+      await storage.removePatternImage(image);
+      await updatePattern(id, {
+        images: patternImages.filter((img) => img.id !== imageId),
+      });
+    }
+  };
+
+  const handleChangeImageType = (imageId: string, type: ImageType) => {
+    const updatedImages = patternImages.map((img) =>
+      img.id === imageId ? { ...img, type } : img
+    );
+    updatePattern(id, { images: updatedImages });
+  };
+
   return (
     <div
       style={{
         padding: theme.spacing.xl,
-        maxWidth: "1000px",
+        maxWidth: "1200px",
         margin: "0 auto",
       }}
     >
@@ -61,151 +99,237 @@ export function PatternDetail({ id }: PatternDetailProps) {
         </Button>
       </div>
 
-      <div
-        style={{
-          backgroundColor: theme.colors.surface,
-          padding: theme.spacing.xl,
-          borderRadius: theme.borderRadius.lg,
-          boxShadow: theme.shadow.md,
-          marginBottom: theme.spacing.lg,
-        }}
-      >
-        <h1
-          style={{
-            margin: 0,
-            marginBottom: theme.spacing.lg,
-            fontSize: "2rem",
-            fontWeight: "700",
-          }}
-        >
-          {pattern.name}
-        </h1>
-
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: theme.spacing.sm,
-            marginBottom: theme.spacing.lg,
-          }}
-        >
-          <div>
-            <strong style={{ color: theme.colors.textSecondary }}>
-              {t.patterns.garmentType}:
-            </strong>{" "}
-            {t.garmentTypes[pattern.garmentType]}
-          </div>
-          <div>
-            <strong style={{ color: theme.colors.textSecondary }}>
-              {t.patterns.length}:
-            </strong>{" "}
-            {pattern.length ? t.lengthTypes[pattern.length] : t.common.none}
-          </div>
-          <div>
-            <strong style={{ color: theme.colors.textSecondary }}>
-              {t.patterns.sleeveLength}:
-            </strong>{" "}
-            {pattern.sleeveLength
-              ? t.sleeveLengthTypes[pattern.sleeveLength]
-              : t.common.none}
-          </div>
-          {pattern.collection && (
-            <div>
-              <strong style={{ color: theme.colors.textSecondary }}>
-                {t.patterns.collection}:
-              </strong>{" "}
-              {pattern.collection}
-            </div>
-          )}
-          <div>
-            <strong style={{ color: theme.colors.textSecondary }}>
-              {t.patterns.createdAt}:
-            </strong>{" "}
-            {new Date(pattern.createdAt).toLocaleDateString()}
-          </div>
-        </div>
-
-        {pattern.description && (
-          <div style={{ marginBottom: theme.spacing.lg }}>
-            <strong
-              style={{
-                color: theme.colors.textSecondary,
-                display: "block",
-                marginBottom: theme.spacing.sm,
-              }}
-            >
-              {t.patterns.description}:
-            </strong>
-            <p style={{ margin: 0, lineHeight: 1.6 }}>{pattern.description}</p>
-          </div>
-        )}
-
-        {pattern.tags.length > 0 && (
-          <div style={{ marginBottom: theme.spacing.lg }}>
-            <strong
-              style={{
-                color: theme.colors.textSecondary,
-                display: "block",
-                marginBottom: theme.spacing.sm,
-              }}
-            >
-              {t.patterns.tags}:
-            </strong>
+      <div style={{ display: "flex", gap: theme.spacing.xl }}>
+        {/* Main Content */}
+        <div style={{ flex: 2 }}>
+          {/* Main Image */}
+          {previewImage && (
             <div
               style={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: theme.spacing.xs,
+                backgroundColor: theme.colors.surface,
+                borderRadius: theme.borderRadius.lg,
+                overflow: "hidden",
+                marginBottom: theme.spacing.lg,
+                boxShadow: theme.shadow.md,
               }}
             >
-              {pattern.tags.map((tag) => (
-                <Tag key={tag} label={tag} />
-              ))}
+              <ImageThumbnail
+                imagePath={previewImage.filePath}
+                alt={pattern.name}
+                height="400px"
+                onClick={() => setLightboxImage(previewImage.filePath)}
+              />
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Attached File */}
-        <div style={{ marginBottom: theme.spacing.lg }}>
-          <strong
+          {/* Image Gallery */}
+          <div
             style={{
-              color: theme.colors.textSecondary,
-              display: "block",
-              marginBottom: theme.spacing.sm,
+              backgroundColor: theme.colors.surface,
+              padding: theme.spacing.lg,
+              borderRadius: theme.borderRadius.lg,
+              boxShadow: theme.shadow.sm,
             }}
           >
-            {t.patterns.attachedFile}:
-          </strong>
-          {pattern.attachedFile ? (
+            <ImageGallery
+              images={patternImages}
+              onAddImages={handleAddImages}
+              onRemoveImage={handleRemoveImage}
+              onChangeImageType={handleChangeImageType}
+              onImageClick={(imagePath) => setLightboxImage(imagePath)}
+              imageTypeLabel={t.patterns.images}
+              addButtonLabel={t.patterns.addImages}
+              emptyMessage={t.patterns.noImages}
+            />
+          </div>
+        </div>
+
+        {/* Sidebar */}
+        <div style={{ flex: 1 }}>
+          <div
+            style={{
+              backgroundColor: theme.colors.surface,
+              padding: theme.spacing.xl,
+              borderRadius: theme.borderRadius.lg,
+              boxShadow: theme.shadow.md,
+              marginBottom: theme.spacing.lg,
+            }}
+          >
+            <h1
+              style={{
+                margin: 0,
+                marginBottom: theme.spacing.lg,
+                fontSize: "2rem",
+                fontWeight: "700",
+              }}
+            >
+              {pattern.name}
+            </h1>
+
             <div
               style={{
                 display: "flex",
-                alignItems: "center",
-                gap: theme.spacing.md,
-                padding: theme.spacing.md,
-                backgroundColor: theme.colors.primaryLight,
-                borderRadius: theme.borderRadius.md,
+                flexDirection: "column",
+                gap: theme.spacing.sm,
+                marginBottom: theme.spacing.lg,
               }}
             >
-              <span>📎 PDF File</span>
-              <Button size="sm" onClick={handleOpenFile}>
-                {t.patterns.openFile}
+              <div>
+                <strong style={{ color: theme.colors.textSecondary }}>
+                  {t.patterns.garmentType}:
+                </strong>{" "}
+                {t.garmentTypes[pattern.garmentType]}
+              </div>
+              <div>
+                <strong style={{ color: theme.colors.textSecondary }}>
+                  {t.patterns.length}:
+                </strong>{" "}
+                {pattern.length ? t.lengthTypes[pattern.length] : t.common.none}
+              </div>
+              <div>
+                <strong style={{ color: theme.colors.textSecondary }}>
+                  {t.patterns.sleeveLength}:
+                </strong>{" "}
+                {pattern.sleeveLength
+                  ? t.sleeveLengthTypes[pattern.sleeveLength]
+                  : t.common.none}
+              </div>
+              {pattern.collection && (
+                <div>
+                  <strong style={{ color: theme.colors.textSecondary }}>
+                    {t.patterns.collection}:
+                  </strong>{" "}
+                  {pattern.collection}
+                </div>
+              )}
+              <div>
+                <strong style={{ color: theme.colors.textSecondary }}>
+                  {t.patterns.createdAt}:
+                </strong>{" "}
+                {new Date(pattern.createdAt).toLocaleDateString()}
+              </div>
+            </div>
+
+            {pattern.description && (
+              <div style={{ marginBottom: theme.spacing.lg }}>
+                <strong
+                  style={{
+                    color: theme.colors.textSecondary,
+                    display: "block",
+                    marginBottom: theme.spacing.sm,
+                  }}
+                >
+                  {t.patterns.description}:
+                </strong>
+                <p style={{ margin: 0, lineHeight: 1.6 }}>
+                  {pattern.description}
+                </p>
+              </div>
+            )}
+
+            {pattern.tags.length > 0 && (
+              <div style={{ marginBottom: theme.spacing.lg }}>
+                <strong
+                  style={{
+                    color: theme.colors.textSecondary,
+                    display: "block",
+                    marginBottom: theme.spacing.sm,
+                  }}
+                >
+                  {t.patterns.tags}:
+                </strong>
+                <div
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: theme.spacing.xs,
+                  }}
+                >
+                  {pattern.tags.map((tag) => (
+                    <Tag key={tag} label={tag} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Attached File */}
+            <div style={{ marginBottom: theme.spacing.lg }}>
+              <strong
+                style={{
+                  color: theme.colors.textSecondary,
+                  display: "block",
+                  marginBottom: theme.spacing.sm,
+                }}
+              >
+                {t.patterns.attachedFile}:
+              </strong>
+              {pattern.attachedFile ? (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: theme.spacing.md,
+                    padding: theme.spacing.md,
+                    backgroundColor: theme.colors.primaryLight,
+                    borderRadius: theme.borderRadius.md,
+                  }}
+                >
+                  <span>📎 PDF File</span>
+                  <Button size="sm" onClick={handleOpenFile}>
+                    {t.patterns.openFile}
+                  </Button>
+                </div>
+              ) : (
+                <p style={{ color: theme.colors.textMuted }}>
+                  {t.patterns.noFile}
+                </p>
+              )}
+            </div>
+
+            <div style={{ display: "flex", gap: theme.spacing.sm }}>
+              <Button onClick={() => setView({ type: "pattern-edit", id })}>
+                {t.common.edit}
+              </Button>
+              <Button variant="danger" onClick={handleDelete}>
+                {t.common.delete}
               </Button>
             </div>
-          ) : (
-            <p style={{ color: theme.colors.textMuted }}>{t.patterns.noFile}</p>
-          )}
-        </div>
-
-        <div style={{ display: "flex", gap: theme.spacing.sm }}>
-          <Button onClick={() => setView({ type: "pattern-edit", id })}>
-            {t.common.edit}
-          </Button>
-          <Button variant="danger" onClick={handleDelete}>
-            {t.common.delete}
-          </Button>
+          </div>
         </div>
       </div>
+
+      {/* Lightbox */}
+      {lightboxImage && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.9)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            cursor: "pointer",
+          }}
+          onClick={() => setLightboxImage(null)}
+        >
+          <img
+            src={lightboxImage}
+            alt="Full size"
+            style={{
+              maxWidth: "90%",
+              maxHeight: "90%",
+              objectFit: "contain",
+            }}
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = "/placeholder.svg";
+            }}
+          />
+        </div>
+      )}
 
       {/* Used in Designs */}
       <div

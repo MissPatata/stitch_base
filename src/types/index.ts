@@ -8,7 +8,7 @@ export type GarmentType =
 export type LengthType = "short" | "mid" | "long" | "other";
 export type SleeveLengthType = "short" | "mid" | "long" | "other";
 export type ProcessStatus = "idea" | "planning" | "inProcess" | "completed";
-export type DesignImageType =
+export type ImageType =
   | "preview"
   | "drawing"
   | "process"
@@ -16,11 +16,21 @@ export type DesignImageType =
   | "design"
   | "others";
 
-export interface DesignImage {
+export type DesignImageType = ImageType;
+export type PatternImageType = ImageType;
+
+export interface Image {
   id: string;
-  designId: string;
-  type: DesignImageType;
+  type: ImageType;
   filePath: string;
+}
+
+export interface DesignImage extends Image {
+  designId: string;
+}
+
+export interface PatternImage extends Image {
+  patternId: string;
 }
 
 export interface PatternFile {
@@ -37,6 +47,7 @@ export interface Pattern {
   name: string;
   description: string;
   attachedFile?: PatternFile;
+  images: PatternImage[];
   tags: string[];
   collection?: string;
   createdAt: string;

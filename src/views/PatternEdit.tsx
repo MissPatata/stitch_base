@@ -4,13 +4,16 @@ import { useStore } from "../store";
 import { useI18n } from "../i18n/context";
 import { Button } from "../components/Button";
 import { Tag } from "../components/Tag";
+import { ImageGallery } from "../components/ImageGallery";
 import { theme } from "../theme";
 import * as storage from "../storage";
 import type {
   Pattern,
+  PatternImage,
   GarmentType,
   LengthType,
   SleeveLengthType,
+  ImageType,
 } from "../types";
 
 interface PatternEditProps {
@@ -47,6 +50,9 @@ export function PatternEdit({ id }: PatternEditProps) {
   const [attachedFile, setAttachedFile] = useState(
     existingPattern?.attachedFile
   );
+  const [images, setImages] = useState<PatternImage[]>(
+    existingPattern?.images ?? []
+  );
 
   const handleAddTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
@@ -74,6 +80,32 @@ export function PatternEdit({ id }: PatternEditProps) {
     }
   };
 
+  const handleAddImages = async () => {
+    const files = await storage.selectImageFiles();
+    if (files) {
+      const newImages = await Promise.all(
+        files.map((file) =>
+          storage.savePatternImage(patternId, file, "process")
+        )
+      );
+      setImages([...images, ...newImages]);
+    }
+  };
+
+  const handleRemoveImage = async (imageId: string) => {
+    const image = images.find((img) => img.id === imageId);
+    if (image) {
+      await storage.removePatternImage(image);
+      setImages(images.filter((img) => img.id !== imageId));
+    }
+  };
+
+  const handleChangeImageType = (imageId: string, type: ImageType) => {
+    setImages(
+      images.map((img) => (img.id === imageId ? { ...img, type } : img))
+    );
+  };
+
   const handleSave = async () => {
     if (!name.trim()) {
       alert("Please enter a name");
@@ -90,6 +122,7 @@ export function PatternEdit({ id }: PatternEditProps) {
       description: description.trim(),
       tags,
       attachedFile,
+      images,
       createdAt: existingPattern?.createdAt || new Date().toISOString(),
     };
 
@@ -379,6 +412,17 @@ export function PatternEdit({ id }: PatternEditProps) {
               ))}
             </div>
           </div>
+
+          {/* Images */}
+          <ImageGallery
+            images={images}
+            onAddImages={handleAddImages}
+            onRemoveImage={handleRemoveImage}
+            onChangeImageType={handleChangeImageType}
+            imageTypeLabel={t.patterns.images}
+            addButtonLabel={t.patterns.addImages}
+            emptyMessage={t.patterns.noImages}
+          />
 
           {/* File Upload */}
           <div>
