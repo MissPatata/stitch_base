@@ -6,6 +6,7 @@ import { Tag } from "../components/Tag";
 import { StatusPill } from "../components/StatusPill";
 import { ImageGallery } from "../components/ImageGallery";
 import { ImageThumbnail } from "../components/ImageThumbnail";
+import { SearchBar } from "../components/SearchBar";
 import { theme } from "../theme";
 import * as storage from "../storage";
 import type { ImageType } from "../types";
@@ -62,24 +63,25 @@ export function DesignDetail({ id }: DesignDetailProps) {
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [showLinkDialog, setShowLinkDialog] = useState(false);
   const [selectedPatternIds, setSelectedPatternIds] = useState<string[]>([]);
+  const [patternSearchQuery, setPatternSearchQuery] = useState("");
   const [showStoragePath, setShowStoragePath] = useState(false);
   const [storagePath, setStoragePath] = useState<string | null>(null);
 
+  const design = designs.find((d) => d.id === id);
+
   // Load storage path on mount
   useEffect(() => {
-    if (window.electronAPI) {
+    if (window.electronAPI && design) {
       window.electronAPI
         .getUserDataPath()
         .then((userDataPath) => {
-          setStoragePath(`${userDataPath}/data`);
+          setStoragePath(`${userDataPath}/data/designs/${design.id}`);
         })
         .catch(console.error);
     } else {
       setStoragePath("Browser mode - files stored in browser storage");
     }
-  }, []);
-
-  const design = designs.find((d) => d.id === id);
+  }, [design, id]);
 
   if (!design) {
     return <div>Design not found</div>;
@@ -112,6 +114,7 @@ export function DesignDetail({ id }: DesignDetailProps) {
 
   const handleOpenLinkDialog = () => {
     setSelectedPatternIds([...design.linkedPatternIds]);
+    setPatternSearchQuery("");
     setShowLinkDialog(true);
   };
 
@@ -518,6 +521,13 @@ export function DesignDetail({ id }: DesignDetailProps) {
           >
             <h2 style={{ marginTop: 0 }}>{t.designs.linkPatterns}</h2>
 
+            <div style={{ marginBottom: theme.spacing.md }}>
+              <SearchBar
+                value={patternSearchQuery}
+                onChange={setPatternSearchQuery}
+              />
+            </div>
+
             <div
               style={{
                 display: "flex",
@@ -526,40 +536,52 @@ export function DesignDetail({ id }: DesignDetailProps) {
                 marginBottom: theme.spacing.lg,
               }}
             >
-              {patterns.map((pattern) => (
-                <label
-                  key={pattern.id}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: theme.spacing.md,
-                    padding: theme.spacing.md,
-                    backgroundColor: theme.colors.surfaceHover,
-                    borderRadius: theme.borderRadius.md,
-                    cursor: "pointer",
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedPatternIds.includes(pattern.id)}
-                    onChange={() => togglePatternSelection(pattern.id)}
-                  />
-                  <div>
-                    <div style={{ fontWeight: "600" }}>{pattern.name}</div>
-                    <div
-                      style={{
-                        fontSize: "0.875rem",
-                        color: theme.colors.textSecondary,
-                      }}
-                    >
-                      {t.garmentTypes[pattern.garmentType]} •{" "}
-                      {pattern.length
-                        ? t.lengthTypes[pattern.length]
-                        : t.common.none}
+              {patterns
+                .filter((pattern) => {
+                  if (!patternSearchQuery) return true;
+                  const query = patternSearchQuery.toLowerCase();
+                  return (
+                    pattern.name.toLowerCase().includes(query) ||
+                    pattern.tags.some((tag) =>
+                      tag.toLowerCase().includes(query)
+                    ) ||
+                    pattern.collection?.toLowerCase().includes(query)
+                  );
+                })
+                .map((pattern) => (
+                  <label
+                    key={pattern.id}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: theme.spacing.md,
+                      padding: theme.spacing.md,
+                      backgroundColor: theme.colors.surfaceHover,
+                      borderRadius: theme.borderRadius.md,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedPatternIds.includes(pattern.id)}
+                      onChange={() => togglePatternSelection(pattern.id)}
+                    />
+                    <div>
+                      <div style={{ fontWeight: "600" }}>{pattern.name}</div>
+                      <div
+                        style={{
+                          fontSize: "0.875rem",
+                          color: theme.colors.textSecondary,
+                        }}
+                      >
+                        {t.garmentTypes[pattern.garmentType]} •{" "}
+                        {pattern.length
+                          ? t.lengthTypes[pattern.length]
+                          : t.common.none}
+                      </div>
                     </div>
-                  </div>
-                </label>
-              ))}
+                  </label>
+                ))}
             </div>
 
             <div style={{ display: "flex", gap: theme.spacing.sm }}>

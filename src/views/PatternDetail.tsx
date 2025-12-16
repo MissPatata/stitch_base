@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useStore } from "../store";
 import { useI18n } from "../i18n/context";
 import { Button } from "../components/Button";
@@ -18,8 +18,24 @@ export function PatternDetail({ id }: PatternDetailProps) {
   const { patterns, designs, setView, deletePattern, updatePattern } =
     useStore();
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [showStoragePath, setShowStoragePath] = useState(false);
+  const [storagePath, setStoragePath] = useState<string | null>(null);
 
   const pattern = patterns.find((p) => p.id === id);
+
+  // Load storage path on mount
+  useEffect(() => {
+    if (window.electronAPI && pattern) {
+      window.electronAPI
+        .getUserDataPath()
+        .then((userDataPath) => {
+          setStoragePath(`${userDataPath}/data/patterns/${pattern.id}`);
+        })
+        .catch(console.error);
+    } else {
+      setStoragePath("Browser mode - files stored in browser storage");
+    }
+  }, [pattern]);
 
   if (!pattern) {
     return <div>Pattern not found</div>;
@@ -79,6 +95,20 @@ export function PatternDetail({ id }: PatternDetailProps) {
       img.id === imageId ? { ...img, type } : img
     );
     updatePattern(id, { images: updatedImages });
+  };
+
+  const handleToggleStoragePath = () => {
+    setShowStoragePath(!showStoragePath);
+  };
+
+  const handleOpenStorageFolder = async () => {
+    if (storagePath && window.electronAPI) {
+      try {
+        await storage.openPath(storagePath);
+      } catch (error) {
+        console.error("Error opening storage folder:", error);
+      }
+    }
   };
 
   return (
@@ -283,6 +313,61 @@ export function PatternDetail({ id }: PatternDetailProps) {
                 <p style={{ color: theme.colors.textMuted }}>
                   {t.patterns.noFile}
                 </p>
+              )}
+            </div>
+
+            {/* Storage Location */}
+            <div style={{ marginBottom: theme.spacing.lg }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: theme.spacing.xs,
+                }}
+              >
+                <strong
+                  style={{
+                    color: theme.colors.textSecondary,
+                    fontSize: "0.875rem",
+                  }}
+                >
+                  {t.common.storageLocation || "Storage Location"}:
+                </strong>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={handleToggleStoragePath}
+                >
+                  {showStoragePath
+                    ? t.common.hide || "Hide"
+                    : t.common.show || "Show"}
+                </Button>
+              </div>
+              {showStoragePath && storagePath && (
+                <div
+                  style={{
+                    padding: theme.spacing.sm,
+                    backgroundColor: theme.colors.primaryLight,
+                    borderRadius: theme.borderRadius.md,
+                    fontSize: "0.75rem",
+                    wordBreak: "break-all",
+                    marginBottom: theme.spacing.xs,
+                  }}
+                >
+                  {storagePath}
+                </div>
+              )}
+              {showStoragePath && storagePath && window.electronAPI && (
+                <div style={{ width: "100%" }}>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={handleOpenStorageFolder}
+                  >
+                    {t.common.openFolder || "Open Folder"}
+                  </Button>
+                </div>
               )}
             </div>
 

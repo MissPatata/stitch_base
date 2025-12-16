@@ -7,7 +7,13 @@ import { Tag } from "../components/Tag";
 import { StatusPill } from "../components/StatusPill";
 import { useImageUrl } from "../hooks/useImageUrl";
 import { theme } from "../theme";
-import type { Design, GarmentType, LengthType, ProcessStatus } from "../types";
+import type {
+  Design,
+  GarmentType,
+  LengthType,
+  SleeveLengthType,
+  ProcessStatus,
+} from "../types";
 
 function ImagePreview({ imagePath, alt }: { imagePath: string; alt: string }) {
   const imageUrl = useImageUrl(imagePath);
@@ -48,6 +54,9 @@ export function DesignsList() {
     ""
   );
   const [filterLength, setFilterLength] = useState<LengthType | "">("");
+  const [filterSleeveLength, setFilterSleeveLength] = useState<
+    SleeveLengthType | ""
+  >("");
   const [filterStatus, setFilterStatus] = useState<ProcessStatus | "">("");
   const [sortBy, setSortBy] = useState<string>("createdAt-desc");
 
@@ -79,6 +88,13 @@ export function DesignsList() {
       // If filter is empty, we show all (including null)
     }
 
+    // Filter by sleeve length
+    if (filterSleeveLength) {
+      result = result.filter((d) => d.sleeveLength === filterSleeveLength);
+    } else {
+      // If filter is empty, we show all (including null)
+    }
+
     // Filter by status
     if (filterStatus) {
       result = result.filter((d) => d.processStatus === filterStatus);
@@ -106,6 +122,7 @@ export function DesignsList() {
     searchQuery,
     filterGarmentType,
     filterLength,
+    filterSleeveLength,
     filterStatus,
     sortBy,
   ]);
@@ -198,6 +215,29 @@ export function DesignsList() {
           {Object.keys(t.lengthTypes).map((key) => (
             <option key={key} value={key}>
               {t.lengthTypes[key as LengthType]}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={filterSleeveLength}
+          onChange={(e) =>
+            setFilterSleeveLength(e.target.value as SleeveLengthType | "")
+          }
+          style={{
+            padding: `${theme.spacing.md} ${theme.spacing.lg}`,
+            borderRadius: theme.borderRadius.md,
+            border: `1px solid ${theme.colors.border}`,
+            backgroundColor: theme.colors.surface,
+            color: theme.colors.textPrimary,
+          }}
+        >
+          <option value="">
+            {t.filters.all} - {t.designs.sleeveLength}
+          </option>
+          {Object.keys(t.sleeveLengthTypes).map((key) => (
+            <option key={key} value={key}>
+              {t.sleeveLengthTypes[key as SleeveLengthType]}
             </option>
           ))}
         </select>

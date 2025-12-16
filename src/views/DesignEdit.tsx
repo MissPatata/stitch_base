@@ -5,6 +5,7 @@ import { useI18n } from "../i18n/context";
 import { Button } from "../components/Button";
 import { Tag } from "../components/Tag";
 import { ImageGallery } from "../components/ImageGallery";
+import { SearchBar } from "../components/SearchBar";
 import { theme } from "../theme";
 import * as storage from "../storage";
 import type {
@@ -55,6 +56,7 @@ export function DesignEdit({ id }: DesignEditProps) {
     existingDesign?.linkedPatternIds || []
   );
   const [showLinkDialog, setShowLinkDialog] = useState(false);
+  const [patternSearchQuery, setPatternSearchQuery] = useState("");
 
   const handleAddTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
@@ -92,6 +94,7 @@ export function DesignEdit({ id }: DesignEditProps) {
   };
 
   const handleOpenLinkDialog = () => {
+    setPatternSearchQuery("");
     setShowLinkDialog(true);
   };
 
@@ -588,6 +591,13 @@ export function DesignEdit({ id }: DesignEditProps) {
           >
             <h2 style={{ marginTop: 0 }}>{t.designs.linkPatterns}</h2>
 
+            <div style={{ marginBottom: theme.spacing.md }}>
+              <SearchBar
+                value={patternSearchQuery}
+                onChange={setPatternSearchQuery}
+              />
+            </div>
+
             <div
               style={{
                 display: "flex",
@@ -596,40 +606,52 @@ export function DesignEdit({ id }: DesignEditProps) {
                 marginBottom: theme.spacing.lg,
               }}
             >
-              {patterns.map((pattern) => (
-                <label
-                  key={pattern.id}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: theme.spacing.md,
-                    padding: theme.spacing.md,
-                    backgroundColor: theme.colors.surfaceHover,
-                    borderRadius: theme.borderRadius.md,
-                    cursor: "pointer",
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={linkedPatternIds.includes(pattern.id)}
-                    onChange={() => togglePatternSelection(pattern.id)}
-                  />
-                  <div>
-                    <div style={{ fontWeight: "600" }}>{pattern.name}</div>
-                    <div
-                      style={{
-                        fontSize: "0.875rem",
-                        color: theme.colors.textSecondary,
-                      }}
-                    >
-                      {t.garmentTypes[pattern.garmentType]} •{" "}
-                      {pattern.length
-                        ? t.lengthTypes[pattern.length]
-                        : t.common.none}
+              {patterns
+                .filter((pattern) => {
+                  if (!patternSearchQuery) return true;
+                  const query = patternSearchQuery.toLowerCase();
+                  return (
+                    pattern.name.toLowerCase().includes(query) ||
+                    pattern.tags.some((tag) =>
+                      tag.toLowerCase().includes(query)
+                    ) ||
+                    pattern.collection?.toLowerCase().includes(query)
+                  );
+                })
+                .map((pattern) => (
+                  <label
+                    key={pattern.id}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: theme.spacing.md,
+                      padding: theme.spacing.md,
+                      backgroundColor: theme.colors.surfaceHover,
+                      borderRadius: theme.borderRadius.md,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={linkedPatternIds.includes(pattern.id)}
+                      onChange={() => togglePatternSelection(pattern.id)}
+                    />
+                    <div>
+                      <div style={{ fontWeight: "600" }}>{pattern.name}</div>
+                      <div
+                        style={{
+                          fontSize: "0.875rem",
+                          color: theme.colors.textSecondary,
+                        }}
+                      >
+                        {t.garmentTypes[pattern.garmentType]} •{" "}
+                        {pattern.length
+                          ? t.lengthTypes[pattern.length]
+                          : t.common.none}
+                      </div>
                     </div>
-                  </div>
-                </label>
-              ))}
+                  </label>
+                ))}
             </div>
 
             <div style={{ display: "flex", gap: theme.spacing.sm }}>

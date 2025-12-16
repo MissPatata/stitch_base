@@ -5,7 +5,12 @@ import { Button } from "../components/Button";
 import { SearchBar } from "../components/SearchBar";
 import { Tag } from "../components/Tag";
 import { theme } from "../theme";
-import type { Pattern, GarmentType, LengthType } from "../types";
+import type {
+  Pattern,
+  GarmentType,
+  LengthType,
+  SleeveLengthType,
+} from "../types";
 
 export function PatternsList() {
   const { t } = useI18n();
@@ -15,6 +20,9 @@ export function PatternsList() {
     ""
   );
   const [filterLength, setFilterLength] = useState<LengthType | "">("");
+  const [filterSleeveLength, setFilterSleeveLength] = useState<
+    SleeveLengthType | ""
+  >("");
   const [sortBy, setSortBy] = useState<string>("createdAt-desc");
 
   const filteredAndSortedPatterns = useMemo(() => {
@@ -45,6 +53,13 @@ export function PatternsList() {
       // If filter is empty, we show all (including null)
     }
 
+    // Filter by sleeve length
+    if (filterSleeveLength) {
+      result = result.filter((p) => p.sleeveLength === filterSleeveLength);
+    } else {
+      // If filter is empty, we show all (including null)
+    }
+
     // Sort
     const [field, order] = sortBy.split("-");
     result.sort((a, b) => {
@@ -62,7 +77,14 @@ export function PatternsList() {
     });
 
     return result;
-  }, [patterns, searchQuery, filterGarmentType, filterLength, sortBy]);
+  }, [
+    patterns,
+    searchQuery,
+    filterGarmentType,
+    filterLength,
+    filterSleeveLength,
+    sortBy,
+  ]);
 
   const handleDelete = (id: string) => {
     if (window.confirm(t.common.confirmDelete)) {
@@ -152,6 +174,29 @@ export function PatternsList() {
           {Object.keys(t.lengthTypes).map((key) => (
             <option key={key} value={key}>
               {t.lengthTypes[key as LengthType]}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={filterSleeveLength}
+          onChange={(e) =>
+            setFilterSleeveLength(e.target.value as SleeveLengthType | "")
+          }
+          style={{
+            padding: `${theme.spacing.md} ${theme.spacing.lg}`,
+            borderRadius: theme.borderRadius.md,
+            border: `1px solid ${theme.colors.border}`,
+            backgroundColor: theme.colors.surface,
+            color: theme.colors.textPrimary,
+          }}
+        >
+          <option value="">
+            {t.filters.all} - {t.patterns.sleeveLength}
+          </option>
+          {Object.keys(t.sleeveLengthTypes).map((key) => (
+            <option key={key} value={key}>
+              {t.sleeveLengthTypes[key as SleeveLengthType]}
             </option>
           ))}
         </select>
