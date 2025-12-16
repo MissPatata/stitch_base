@@ -1,52 +1,62 @@
-import { useStore } from "../store"
-import { useI18n } from "../i18n/context"
-import { Button } from "../components/Button"
-import { Tag } from "../components/Tag"
-import { theme } from "../theme"
-import * as storage from "../storage"
+import { useStore } from "../store";
+import { useI18n } from "../i18n/context";
+import { Button } from "../components/Button";
+import { Tag } from "../components/Tag";
+import { theme } from "../theme";
+import * as storage from "../storage";
 
 interface PatternDetailProps {
-  id: string
+  id: string;
 }
 
 export function PatternDetail({ id }: PatternDetailProps) {
-  const { t } = useI18n()
-  const { patterns, designs, setView, deletePattern } = useStore()
+  const { t } = useI18n();
+  const { patterns, designs, setView, deletePattern } = useStore();
 
-  const pattern = patterns.find((p) => p.id === id)
+  const pattern = patterns.find((p) => p.id === id);
 
   if (!pattern) {
-    return <div>Pattern not found</div>
+    return <div>Pattern not found</div>;
   }
 
-  const usedInDesigns = designs.filter((d) => d.linkedPatternIds.includes(id))
+  const usedInDesigns = designs.filter((d) => d.linkedPatternIds.includes(id));
 
   const handleDelete = () => {
     if (window.confirm(t.common.confirmDelete)) {
-      deletePattern(id)
-      setView({ type: "patterns-list" })
+      deletePattern(id);
+      setView({ type: "patterns-list" });
     }
-  }
+  };
 
   const handleOpenFile = async () => {
     if (pattern.attachedFile) {
       try {
-        console.log("Opening file:", pattern.attachedFile.filePath)
-        await storage.openFile(pattern.attachedFile.filePath)
+        console.log("Opening file:", pattern.attachedFile.filePath);
+        await storage.openFile(pattern.attachedFile.filePath);
       } catch (error) {
-        console.error("Error opening file:", error)
+        console.error("Error opening file:", error);
         // Error will be caught by global error handler
-        throw error
+        throw error;
       }
     } else {
-      console.warn("No attached file to open")
+      console.warn("No attached file to open");
     }
-  }
+  };
 
   return (
-    <div style={{ padding: theme.spacing.xl, maxWidth: "1000px", margin: "0 auto" }}>
+    <div
+      style={{
+        padding: theme.spacing.xl,
+        maxWidth: "1000px",
+        margin: "0 auto",
+      }}
+    >
       <div style={{ marginBottom: theme.spacing.xl }}>
-        <Button variant="secondary" size="sm" onClick={() => setView({ type: "patterns-list" })}>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => setView({ type: "patterns-list" })}
+        >
           ← {t.common.back}
         </Button>
       </div>
@@ -60,36 +70,70 @@ export function PatternDetail({ id }: PatternDetailProps) {
           marginBottom: theme.spacing.lg,
         }}
       >
-        <h1 style={{ margin: 0, marginBottom: theme.spacing.lg, fontSize: "2rem", fontWeight: "700" }}>
+        <h1
+          style={{
+            margin: 0,
+            marginBottom: theme.spacing.lg,
+            fontSize: "2rem",
+            fontWeight: "700",
+          }}
+        >
           {pattern.name}
         </h1>
 
         <div
-          style={{ display: "flex", flexDirection: "column", gap: theme.spacing.sm, marginBottom: theme.spacing.lg }}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: theme.spacing.sm,
+            marginBottom: theme.spacing.lg,
+          }}
         >
           <div>
-            <strong style={{ color: theme.colors.textSecondary }}>{t.patterns.garmentType}:</strong>{" "}
+            <strong style={{ color: theme.colors.textSecondary }}>
+              {t.patterns.garmentType}:
+            </strong>{" "}
             {t.garmentTypes[pattern.garmentType]}
           </div>
           <div>
-            <strong style={{ color: theme.colors.textSecondary }}>{t.patterns.length}:</strong>{" "}
-            {t.lengthTypes[pattern.length]}
+            <strong style={{ color: theme.colors.textSecondary }}>
+              {t.patterns.length}:
+            </strong>{" "}
+            {pattern.length ? t.lengthTypes[pattern.length] : t.common.none}
+          </div>
+          <div>
+            <strong style={{ color: theme.colors.textSecondary }}>
+              {t.patterns.sleeveLength}:
+            </strong>{" "}
+            {pattern.sleeveLength
+              ? t.sleeveLengthTypes[pattern.sleeveLength]
+              : t.common.none}
           </div>
           {pattern.collection && (
             <div>
-              <strong style={{ color: theme.colors.textSecondary }}>{t.patterns.collection}:</strong>{" "}
+              <strong style={{ color: theme.colors.textSecondary }}>
+                {t.patterns.collection}:
+              </strong>{" "}
               {pattern.collection}
             </div>
           )}
           <div>
-            <strong style={{ color: theme.colors.textSecondary }}>{t.patterns.createdAt}:</strong>{" "}
+            <strong style={{ color: theme.colors.textSecondary }}>
+              {t.patterns.createdAt}:
+            </strong>{" "}
             {new Date(pattern.createdAt).toLocaleDateString()}
           </div>
         </div>
 
         {pattern.description && (
           <div style={{ marginBottom: theme.spacing.lg }}>
-            <strong style={{ color: theme.colors.textSecondary, display: "block", marginBottom: theme.spacing.sm }}>
+            <strong
+              style={{
+                color: theme.colors.textSecondary,
+                display: "block",
+                marginBottom: theme.spacing.sm,
+              }}
+            >
               {t.patterns.description}:
             </strong>
             <p style={{ margin: 0, lineHeight: 1.6 }}>{pattern.description}</p>
@@ -98,10 +142,22 @@ export function PatternDetail({ id }: PatternDetailProps) {
 
         {pattern.tags.length > 0 && (
           <div style={{ marginBottom: theme.spacing.lg }}>
-            <strong style={{ color: theme.colors.textSecondary, display: "block", marginBottom: theme.spacing.sm }}>
+            <strong
+              style={{
+                color: theme.colors.textSecondary,
+                display: "block",
+                marginBottom: theme.spacing.sm,
+              }}
+            >
               {t.patterns.tags}:
             </strong>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: theme.spacing.xs }}>
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: theme.spacing.xs,
+              }}
+            >
               {pattern.tags.map((tag) => (
                 <Tag key={tag} label={tag} />
               ))}
@@ -111,7 +167,13 @@ export function PatternDetail({ id }: PatternDetailProps) {
 
         {/* Attached File */}
         <div style={{ marginBottom: theme.spacing.lg }}>
-          <strong style={{ color: theme.colors.textSecondary, display: "block", marginBottom: theme.spacing.sm }}>
+          <strong
+            style={{
+              color: theme.colors.textSecondary,
+              display: "block",
+              marginBottom: theme.spacing.sm,
+            }}
+          >
             {t.patterns.attachedFile}:
           </strong>
           {pattern.attachedFile ? (
@@ -136,7 +198,9 @@ export function PatternDetail({ id }: PatternDetailProps) {
         </div>
 
         <div style={{ display: "flex", gap: theme.spacing.sm }}>
-          <Button onClick={() => setView({ type: "pattern-edit", id })}>{t.common.edit}</Button>
+          <Button onClick={() => setView({ type: "pattern-edit", id })}>
+            {t.common.edit}
+          </Button>
           <Button variant="danger" onClick={handleDelete}>
             {t.common.delete}
           </Button>
@@ -152,10 +216,18 @@ export function PatternDetail({ id }: PatternDetailProps) {
           boxShadow: theme.shadow.sm,
         }}
       >
-        <h2 style={{ marginTop: 0, fontSize: "1.5rem", fontWeight: "600" }}>{t.patterns.usedInDesigns}</h2>
+        <h2 style={{ marginTop: 0, fontSize: "1.5rem", fontWeight: "600" }}>
+          {t.patterns.usedInDesigns}
+        </h2>
 
         {usedInDesigns.length > 0 ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: theme.spacing.md }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: theme.spacing.md,
+            }}
+          >
             {usedInDesigns.map((design) => (
               <div
                 key={design.id}
@@ -168,12 +240,29 @@ export function PatternDetail({ id }: PatternDetailProps) {
                   justifyContent: "space-between",
                   alignItems: "center",
                 }}
-                onClick={() => setView({ type: "design-detail", id: design.id })}
+                onClick={() =>
+                  setView({ type: "design-detail", id: design.id })
+                }
               >
                 <div>
-                  <div style={{ fontWeight: "600", marginBottom: theme.spacing.xs }}>{design.name}</div>
-                  <div style={{ fontSize: "0.875rem", color: theme.colors.textSecondary }}>
-                    {t.garmentTypes[design.garmentType]} • {t.lengthTypes[design.length]}
+                  <div
+                    style={{
+                      fontWeight: "600",
+                      marginBottom: theme.spacing.xs,
+                    }}
+                  >
+                    {design.name}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "0.875rem",
+                      color: theme.colors.textSecondary,
+                    }}
+                  >
+                    {t.garmentTypes[design.garmentType]} •{" "}
+                    {design.length
+                      ? t.lengthTypes[design.length]
+                      : t.common.none}
                   </div>
                 </div>
                 <Button size="sm" variant="secondary">
@@ -183,9 +272,11 @@ export function PatternDetail({ id }: PatternDetailProps) {
             ))}
           </div>
         ) : (
-          <p style={{ color: theme.colors.textMuted }}>{t.patterns.noDesigns}</p>
+          <p style={{ color: theme.colors.textMuted }}>
+            {t.patterns.noDesigns}
+          </p>
         )}
       </div>
     </div>
-  )
+  );
 }

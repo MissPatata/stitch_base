@@ -20,6 +20,7 @@ export const en = {
     show: "Show",
     hide: "Hide",
     openFolder: "Open Folder",
+    none: "None",
   },
   designs: {
     title: "Designs",
@@ -29,6 +30,7 @@ export const en = {
     name: "Name",
     garmentType: "Garment Type",
     length: "Length",
+    sleeveLength: "Sleeve Length",
     description: "Description",
     tags: "Tags",
     collection: "Collection",
@@ -50,6 +52,7 @@ export const en = {
     name: "Name",
     garmentType: "Garment Type",
     length: "Length",
+    sleeveLength: "Sleeve Length",
     description: "Description",
     tags: "Tags",
     collection: "Collection",
@@ -75,6 +78,12 @@ export const en = {
     long: "Long",
     other: "Other",
   },
+  sleeveLengthTypes: {
+    short: "Short",
+    mid: "Mid",
+    long: "Long",
+    other: "Other",
+  },
   processStatus: {
     idea: "Idea",
     planning: "Planning",
@@ -86,6 +95,8 @@ export const en = {
     drawing: "Drawing",
     process: "Process",
     result: "Result",
+    design: "Design",
+    others: "Others",
   },
   filters: {
     filterBy: "Filter By",
@@ -93,6 +104,6 @@ export const en = {
     clearFilters: "Clear Filters",
     all: "All",
   },
-}
+};
 
-export type Translations = typeof en
+export type Translations = typeof en;

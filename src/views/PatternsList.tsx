@@ -1,70 +1,74 @@
-import { useState, useMemo } from "react"
-import { useStore } from "../store"
-import { useI18n } from "../i18n/context"
-import { Button } from "../components/Button"
-import { SearchBar } from "../components/SearchBar"
-import { Tag } from "../components/Tag"
-import { theme } from "../theme"
-import type { Pattern, GarmentType, LengthType } from "../types"
+import { useState, useMemo } from "react";
+import { useStore } from "../store";
+import { useI18n } from "../i18n/context";
+import { Button } from "../components/Button";
+import { SearchBar } from "../components/SearchBar";
+import { Tag } from "../components/Tag";
+import { theme } from "../theme";
+import type { Pattern, GarmentType, LengthType } from "../types";
 
 export function PatternsList() {
-  const { t } = useI18n()
-  const { patterns, setView, deletePattern } = useStore()
-  const [searchQuery, setSearchQuery] = useState("")
-  const [filterGarmentType, setFilterGarmentType] = useState<GarmentType | "">("")
-  const [filterLength, setFilterLength] = useState<LengthType | "">("")
-  const [sortBy, setSortBy] = useState<string>("createdAt-desc")
+  const { t } = useI18n();
+  const { patterns, setView, deletePattern } = useStore();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterGarmentType, setFilterGarmentType] = useState<GarmentType | "">(
+    ""
+  );
+  const [filterLength, setFilterLength] = useState<LengthType | "">("");
+  const [sortBy, setSortBy] = useState<string>("createdAt-desc");
 
   const filteredAndSortedPatterns = useMemo(() => {
     // Ensure patterns is always an array
-    const patternsArray = Array.isArray(patterns) ? patterns : []
-    let result = [...patternsArray]
+    const patternsArray = Array.isArray(patterns) ? patterns : [];
+    let result = [...patternsArray];
 
     // Filter by search
     if (searchQuery) {
-      const query = searchQuery.toLowerCase()
+      const query = searchQuery.toLowerCase();
       result = result.filter(
         (p) =>
           p.name.toLowerCase().includes(query) ||
           p.tags.some((tag) => tag.toLowerCase().includes(query)) ||
-          p.collection?.toLowerCase().includes(query),
-      )
+          p.collection?.toLowerCase().includes(query)
+      );
     }
 
     // Filter by garment type
     if (filterGarmentType) {
-      result = result.filter((p) => p.garmentType === filterGarmentType)
+      result = result.filter((p) => p.garmentType === filterGarmentType);
     }
 
     // Filter by length
     if (filterLength) {
-      result = result.filter((p) => p.length === filterLength)
+      result = result.filter((p) => p.length === filterLength);
+    } else {
+      // If filter is empty, we show all (including null)
     }
 
     // Sort
-    const [field, order] = sortBy.split("-")
+    const [field, order] = sortBy.split("-");
     result.sort((a, b) => {
-      let aVal: any = a[field as keyof Pattern]
-      let bVal: any = b[field as keyof Pattern]
+      let aVal: any = a[field as keyof Pattern];
+      let bVal: any = b[field as keyof Pattern];
 
       if (field === "createdAt") {
-        aVal = new Date(aVal).getTime()
-        bVal = new Date(bVal).getTime()
+        aVal = new Date(aVal).getTime();
+        bVal = new Date(bVal).getTime();
       }
 
-      if (aVal < bVal) return order === "asc" ? -1 : 1
-      if (aVal > bVal) return order === "asc" ? 1 : -1
-      return 0
-    })
+      if (aVal < bVal) return order === "asc" ? -1 : 1;
+      if (aVal > bVal) return order === "asc" ? 1 : -1;
+      return 0;
+    });
 
-    return result
-  }, [patterns, searchQuery, filterGarmentType, filterLength, sortBy])
+    return result;
+  }, [patterns, searchQuery, filterGarmentType, filterLength, sortBy]);
 
   const handleDelete = (id: string) => {
     if (window.confirm(t.common.confirmDelete)) {
-      deletePattern(id)
+      deletePattern(id);
     }
-  }
+  };
 
   return (
     <div style={{ padding: theme.spacing.xl }}>
@@ -77,10 +81,19 @@ export function PatternsList() {
           marginBottom: theme.spacing.xl,
         }}
       >
-        <h1 style={{ fontSize: "2rem", fontWeight: "700", margin: 0, color: theme.colors.textPrimary }}>
+        <h1
+          style={{
+            fontSize: "2rem",
+            fontWeight: "700",
+            margin: 0,
+            color: theme.colors.textPrimary,
+          }}
+        >
           {t.patterns.title}
         </h1>
-        <Button onClick={() => setView({ type: "pattern-edit" })}>+ {t.patterns.newPattern}</Button>
+        <Button onClick={() => setView({ type: "pattern-edit" })}>
+          + {t.patterns.newPattern}
+        </Button>
       </div>
 
       {/* Filters */}
@@ -101,7 +114,9 @@ export function PatternsList() {
 
         <select
           value={filterGarmentType}
-          onChange={(e) => setFilterGarmentType(e.target.value as GarmentType | "")}
+          onChange={(e) =>
+            setFilterGarmentType(e.target.value as GarmentType | "")
+          }
           style={{
             padding: `${theme.spacing.md} ${theme.spacing.lg}`,
             borderRadius: theme.borderRadius.md,
@@ -153,7 +168,9 @@ export function PatternsList() {
             marginLeft: "auto",
           }}
         >
-          <option value="createdAt-desc">{t.patterns.createdAt} (Newest)</option>
+          <option value="createdAt-desc">
+            {t.patterns.createdAt} (Newest)
+          </option>
           <option value="createdAt-asc">{t.patterns.createdAt} (Oldest)</option>
           <option value="name-asc">{t.patterns.name} (A-Z)</option>
           <option value="name-desc">{t.patterns.name} (Z-A)</option>
@@ -181,12 +198,26 @@ export function PatternsList() {
             }}
             onClick={() => setView({ type: "pattern-detail", id: pattern.id })}
           >
-            <h3 style={{ margin: 0, marginBottom: theme.spacing.sm, fontSize: "1.25rem", fontWeight: "600" }}>
+            <h3
+              style={{
+                margin: 0,
+                marginBottom: theme.spacing.sm,
+                fontSize: "1.25rem",
+                fontWeight: "600",
+              }}
+            >
               {pattern.name}
             </h3>
 
-            <div style={{ fontSize: "0.875rem", color: theme.colors.textSecondary, marginBottom: theme.spacing.sm }}>
-              {t.garmentTypes[pattern.garmentType]} • {t.lengthTypes[pattern.length]}
+            <div
+              style={{
+                fontSize: "0.875rem",
+                color: theme.colors.textSecondary,
+                marginBottom: theme.spacing.sm,
+              }}
+            >
+              {t.garmentTypes[pattern.garmentType]} •{" "}
+              {pattern.length ? t.lengthTypes[pattern.length] : t.common.none}
             </div>
 
             {pattern.attachedFile && (
@@ -205,12 +236,24 @@ export function PatternsList() {
             )}
 
             {pattern.tags.length > 0 && (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: theme.spacing.xs, marginBottom: theme.spacing.md }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: theme.spacing.xs,
+                  marginBottom: theme.spacing.md,
+                }}
+              >
                 {pattern.tags.slice(0, 3).map((tag) => (
                   <Tag key={tag} label={tag} />
                 ))}
                 {pattern.tags.length > 3 && (
-                  <span style={{ fontSize: "0.875rem", color: theme.colors.textMuted }}>
+                  <span
+                    style={{
+                      fontSize: "0.875rem",
+                      color: theme.colors.textMuted,
+                    }}
+                  >
                     +{pattern.tags.length - 3}
                   </span>
                 )}
@@ -225,10 +268,20 @@ export function PatternsList() {
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              <Button size="sm" variant="secondary" onClick={() => setView({ type: "pattern-edit", id: pattern.id })}>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() =>
+                  setView({ type: "pattern-edit", id: pattern.id })
+                }
+              >
                 {t.common.edit}
               </Button>
-              <Button size="sm" variant="danger" onClick={() => handleDelete(pattern.id)}>
+              <Button
+                size="sm"
+                variant="danger"
+                onClick={() => handleDelete(pattern.id)}
+              >
                 {t.common.delete}
               </Button>
             </div>
@@ -248,5 +301,5 @@ export function PatternsList() {
         </div>
       )}
     </div>
-  )
+  );
 }

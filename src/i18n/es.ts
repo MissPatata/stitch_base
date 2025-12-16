@@ -1,4 +1,4 @@
-import type { Translations } from "./en"
+import type { Translations } from "./en";
 
 export const es: Translations = {
   navigation: {
@@ -22,6 +22,7 @@ export const es: Translations = {
     show: "Mostrar",
     hide: "Ocultar",
     openFolder: "Abrir Carpeta",
+    none: "Ninguno",
   },
   designs: {
     title: "Diseños",
@@ -31,6 +32,7 @@ export const es: Translations = {
     name: "Nombre",
     garmentType: "Tipo de Prenda",
     length: "Largo",
+    sleeveLength: "Largo de Manga",
     description: "Descripción",
     tags: "Etiquetas",
     collection: "Colección",
@@ -52,6 +54,7 @@ export const es: Translations = {
     name: "Nombre",
     garmentType: "Tipo de Prenda",
     length: "Largo",
+    sleeveLength: "Largo de Manga",
     description: "Descripción",
     tags: "Etiquetas",
     collection: "Colección",
@@ -77,6 +80,12 @@ export const es: Translations = {
     long: "Largo",
     other: "Otro",
   },
+  sleeveLengthTypes: {
+    short: "Corto",
+    mid: "Medio",
+    long: "Largo",
+    other: "Otro",
+  },
   processStatus: {
     idea: "Idea",
     planning: "Planificación",
@@ -88,6 +97,8 @@ export const es: Translations = {
     drawing: "Dibujo",
     process: "Proceso",
     result: "Resultado",
+    design: "Diseño",
+    others: "Otros",
   },
   filters: {
     filterBy: "Filtrar Por",
@@ -95,4 +106,4 @@ export const es: Translations = {
     clearFilters: "Limpiar Filtros",
     all: "Todos",
   },
-}
+};

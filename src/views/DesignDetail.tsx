@@ -1,20 +1,28 @@
-import { useState, useEffect } from "react"
-import { useStore } from "../store"
-import { useI18n } from "../i18n/context"
-import { Button } from "../components/Button"
-import { Tag } from "../components/Tag"
-import { StatusPill } from "../components/StatusPill"
-import { useImageUrl } from "../hooks/useImageUrl"
-import { theme } from "../theme"
-import * as storage from "../storage"
-import type { DesignImageType } from "../types"
+import { useState, useEffect } from "react";
+import { useStore } from "../store";
+import { useI18n } from "../i18n/context";
+import { Button } from "../components/Button";
+import { Tag } from "../components/Tag";
+import { StatusPill } from "../components/StatusPill";
+import { useImageUrl } from "../hooks/useImageUrl";
+import { theme } from "../theme";
+import * as storage from "../storage";
+import type { DesignImageType } from "../types";
 
 interface DesignDetailProps {
-  id: string
+  id: string;
 }
 
-function PreviewImage({ imagePath, alt, onClick }: { imagePath: string; alt: string; onClick: () => void }) {
-  const imageUrl = useImageUrl(imagePath)
+function PreviewImage({
+  imagePath,
+  alt,
+  onClick,
+}: {
+  imagePath: string;
+  alt: string;
+  onClick: () => void;
+}) {
+  const imageUrl = useImageUrl(imagePath);
   return (
     <img
       src={imageUrl}
@@ -27,14 +35,20 @@ function PreviewImage({ imagePath, alt, onClick }: { imagePath: string; alt: str
       }}
       onClick={onClick}
       onError={(e) => {
-        ;(e.target as HTMLImageElement).src = "/placeholder.svg"
+        (e.target as HTMLImageElement).src = "/placeholder.svg";
       }}
     />
-  )
+  );
 }
 
-function Lightbox({ imagePath, onClose }: { imagePath: string; onClose: () => void }) {
-  const imageUrl = useImageUrl(imagePath)
+function Lightbox({
+  imagePath,
+  onClose,
+}: {
+  imagePath: string;
+  onClose: () => void;
+}) {
+  const imageUrl = useImageUrl(imagePath);
   return (
     <div
       style={{
@@ -61,94 +75,114 @@ function Lightbox({ imagePath, onClose }: { imagePath: string; onClose: () => vo
           objectFit: "contain",
         }}
         onError={(e) => {
-          ;(e.target as HTMLImageElement).src = "/placeholder.svg"
+          (e.target as HTMLImageElement).src = "/placeholder.svg";
         }}
       />
     </div>
-  )
+  );
 }
 
 export function DesignDetail({ id }: DesignDetailProps) {
-  const { t } = useI18n()
-  const { designs, patterns, setView, deleteDesign, updateDesign } = useStore()
-  const [lightboxImage, setLightboxImage] = useState<string | null>(null)
-  const [showLinkDialog, setShowLinkDialog] = useState(false)
-  const [selectedPatternIds, setSelectedPatternIds] = useState<string[]>([])
-  const [showStoragePath, setShowStoragePath] = useState(false)
-  const [storagePath, setStoragePath] = useState<string | null>(null)
+  const { t } = useI18n();
+  const { designs, patterns, setView, deleteDesign, updateDesign } = useStore();
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [showLinkDialog, setShowLinkDialog] = useState(false);
+  const [selectedPatternIds, setSelectedPatternIds] = useState<string[]>([]);
+  const [showStoragePath, setShowStoragePath] = useState(false);
+  const [storagePath, setStoragePath] = useState<string | null>(null);
 
   // Load storage path on mount
   useEffect(() => {
     if (window.electronAPI) {
-      window.electronAPI.getUserDataPath().then((userDataPath) => {
-        setStoragePath(`${userDataPath}/data`)
-      }).catch(console.error)
+      window.electronAPI
+        .getUserDataPath()
+        .then((userDataPath) => {
+          setStoragePath(`${userDataPath}/data`);
+        })
+        .catch(console.error);
     } else {
-      setStoragePath("Browser mode - files stored in browser storage")
+      setStoragePath("Browser mode - files stored in browser storage");
     }
-  }, [])
+  }, []);
 
-  const design = designs.find((d) => d.id === id)
+  const design = designs.find((d) => d.id === id);
 
   if (!design) {
-    return <div>Design not found</div>
+    return <div>Design not found</div>;
   }
 
-  const linkedPatterns = patterns.filter((p) => design.linkedPatternIds.includes(p.id))
-  const previewImage = design.images.find((img) => img.type === "preview") || design.images[0]
+  const linkedPatterns = patterns.filter((p) =>
+    design.linkedPatternIds.includes(p.id)
+  );
+  const previewImage =
+    design.images.find((img) => img.type === "preview") || design.images[0];
 
   const handleDelete = () => {
     if (window.confirm(t.common.confirmDelete)) {
-      deleteDesign(id)
-      setView({ type: "designs-list" })
+      deleteDesign(id);
+      setView({ type: "designs-list" });
     }
-  }
+  };
 
   const handleAddImages = async () => {
-    const files = await storage.selectImageFiles()
+    const files = await storage.selectImageFiles();
     if (files) {
-      const newImages = await Promise.all(files.map((file) => storage.saveDesignImage(id, file, "process")))
+      const newImages = await Promise.all(
+        files.map((file) => storage.saveDesignImage(id, file, "process"))
+      );
       await updateDesign(id, {
         images: [...design.images, ...newImages],
-      })
+      });
     }
-  }
+  };
 
   const handleOpenLinkDialog = () => {
-    setSelectedPatternIds([...design.linkedPatternIds])
-    setShowLinkDialog(true)
-  }
+    setSelectedPatternIds([...design.linkedPatternIds]);
+    setShowLinkDialog(true);
+  };
 
   const handleSaveLinks = async () => {
-    await updateDesign(id, { linkedPatternIds: selectedPatternIds })
-    setShowLinkDialog(false)
-  }
+    await updateDesign(id, { linkedPatternIds: selectedPatternIds });
+    setShowLinkDialog(false);
+  };
 
   const handleToggleStoragePath = () => {
-    setShowStoragePath(!showStoragePath)
-  }
+    setShowStoragePath(!showStoragePath);
+  };
 
   const handleOpenStorageFolder = async () => {
     if (storagePath && window.electronAPI) {
       try {
-        await storage.openPath(storagePath)
+        await storage.openPath(storagePath);
       } catch (error) {
-        console.error("Error opening storage folder:", error)
+        console.error("Error opening storage folder:", error);
       }
     }
-  }
+  };
 
   const togglePatternSelection = (patternId: string) => {
     setSelectedPatternIds((prev) =>
-      prev.includes(patternId) ? prev.filter((id) => id !== patternId) : [...prev, patternId],
-    )
-  }
+      prev.includes(patternId)
+        ? prev.filter((id) => id !== patternId)
+        : [...prev, patternId]
+    );
+  };
 
   return (
-    <div style={{ padding: theme.spacing.xl, maxWidth: "1200px", margin: "0 auto" }}>
+    <div
+      style={{
+        padding: theme.spacing.xl,
+        maxWidth: "1200px",
+        margin: "0 auto",
+      }}
+    >
       {/* Header */}
       <div style={{ marginBottom: theme.spacing.xl }}>
-        <Button variant="secondary" size="sm" onClick={() => setView({ type: "designs-list" })}>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => setView({ type: "designs-list" })}
+        >
           ← {t.common.back}
         </Button>
       </div>
@@ -167,7 +201,11 @@ export function DesignDetail({ id }: DesignDetailProps) {
                 boxShadow: theme.shadow.md,
               }}
             >
-              <PreviewImage imagePath={previewImage.filePath} alt={design.name} onClick={() => setLightboxImage(previewImage.filePath)} />
+              <PreviewImage
+                imagePath={previewImage.filePath}
+                alt={design.name}
+                onClick={() => setLightboxImage(previewImage.filePath)}
+              />
             </div>
           )}
 
@@ -188,7 +226,9 @@ export function DesignDetail({ id }: DesignDetailProps) {
                 marginBottom: theme.spacing.md,
               }}
             >
-              <h2 style={{ margin: 0, fontSize: "1.25rem", fontWeight: "600" }}>{t.designs.images}</h2>
+              <h2 style={{ margin: 0, fontSize: "1.25rem", fontWeight: "600" }}>
+                {t.designs.images}
+              </h2>
               <Button size="sm" onClick={handleAddImages}>
                 + {t.designs.addImages}
               </Button>
@@ -206,12 +246,18 @@ export function DesignDetail({ id }: DesignDetailProps) {
                   const handleChangeType = (newType: DesignImageType) => {
                     const updatedImages = design.images.map((img) =>
                       img.id === image.id ? { ...img, type: newType } : img
-                    )
-                    updateDesign(id, { images: updatedImages })
-                  }
+                    );
+                    updateDesign(id, { images: updatedImages });
+                  };
 
-                  const ImageThumbnail = ({ imagePath, alt }: { imagePath: string; alt: string }) => {
-                    const imageUrl = useImageUrl(imagePath)
+                  const ImageThumbnail = ({
+                    imagePath,
+                    alt,
+                  }: {
+                    imagePath: string;
+                    alt: string;
+                  }) => {
+                    const imageUrl = useImageUrl(imagePath);
                     return (
                       <div
                         style={{
@@ -231,13 +277,14 @@ export function DesignDetail({ id }: DesignDetailProps) {
                             objectFit: "cover",
                           }}
                           onError={(e) => {
-                            ;(e.target as HTMLImageElement).src = "/placeholder.svg"
+                            (e.target as HTMLImageElement).src =
+                              "/placeholder.svg";
                           }}
                         />
                       </div>
-                    )
-                  }
-                  
+                    );
+                  };
+
                   return (
                     <div
                       key={image.id}
@@ -249,7 +296,10 @@ export function DesignDetail({ id }: DesignDetailProps) {
                         backgroundColor: theme.colors.surface,
                       }}
                     >
-                      <ImageThumbnail imagePath={image.filePath} alt={t.imageTypes[image.type]} />
+                      <ImageThumbnail
+                        imagePath={image.filePath}
+                        alt={t.imageTypes[image.type]}
+                      />
                       <div
                         style={{
                           padding: theme.spacing.xs,
@@ -270,7 +320,9 @@ export function DesignDetail({ id }: DesignDetailProps) {
                         </label>
                         <select
                           value={image.type}
-                          onChange={(e) => handleChangeType(e.target.value as DesignImageType)}
+                          onChange={(e) =>
+                            handleChangeType(e.target.value as DesignImageType)
+                          }
                           onClick={(e) => e.stopPropagation()}
                           style={{
                             width: "100%",
@@ -291,11 +343,13 @@ export function DesignDetail({ id }: DesignDetailProps) {
                         </select>
                       </div>
                     </div>
-                  )
+                  );
                 })}
               </div>
             ) : (
-              <p style={{ color: theme.colors.textMuted }}>{t.designs.noImages}</p>
+              <p style={{ color: theme.colors.textMuted }}>
+                {t.designs.noImages}
+              </p>
             )}
           </div>
         </div>
@@ -311,7 +365,14 @@ export function DesignDetail({ id }: DesignDetailProps) {
               marginBottom: theme.spacing.lg,
             }}
           >
-            <h1 style={{ margin: 0, marginBottom: theme.spacing.md, fontSize: "2rem", fontWeight: "700" }}>
+            <h1
+              style={{
+                margin: 0,
+                marginBottom: theme.spacing.md,
+                fontSize: "2rem",
+                fontWeight: "700",
+              }}
+            >
               {design.name}
             </h1>
 
@@ -328,40 +389,76 @@ export function DesignDetail({ id }: DesignDetailProps) {
               }}
             >
               <div>
-                <strong style={{ color: theme.colors.textSecondary }}>{t.designs.garmentType}:</strong>{" "}
+                <strong style={{ color: theme.colors.textSecondary }}>
+                  {t.designs.garmentType}:
+                </strong>{" "}
                 {t.garmentTypes[design.garmentType]}
               </div>
               <div>
-                <strong style={{ color: theme.colors.textSecondary }}>{t.designs.length}:</strong>{" "}
-                {t.lengthTypes[design.length]}
+                <strong style={{ color: theme.colors.textSecondary }}>
+                  {t.designs.length}:
+                </strong>{" "}
+                {design.length ? t.lengthTypes[design.length] : t.common.none}
+              </div>
+              <div>
+                <strong style={{ color: theme.colors.textSecondary }}>
+                  {t.designs.sleeveLength}:
+                </strong>{" "}
+                {design.sleeveLength
+                  ? t.sleeveLengthTypes[design.sleeveLength]
+                  : t.common.none}
               </div>
               {design.collection && (
                 <div>
-                  <strong style={{ color: theme.colors.textSecondary }}>{t.designs.collection}:</strong>{" "}
+                  <strong style={{ color: theme.colors.textSecondary }}>
+                    {t.designs.collection}:
+                  </strong>{" "}
                   {design.collection}
                 </div>
               )}
               <div>
-                <strong style={{ color: theme.colors.textSecondary }}>{t.designs.createdAt}:</strong>{" "}
+                <strong style={{ color: theme.colors.textSecondary }}>
+                  {t.designs.createdAt}:
+                </strong>{" "}
                 {new Date(design.createdAt).toLocaleDateString()}
               </div>
             </div>
 
             {design.description && (
               <div style={{ marginBottom: theme.spacing.lg }}>
-                <strong style={{ color: theme.colors.textSecondary, display: "block", marginBottom: theme.spacing.sm }}>
+                <strong
+                  style={{
+                    color: theme.colors.textSecondary,
+                    display: "block",
+                    marginBottom: theme.spacing.sm,
+                  }}
+                >
                   {t.designs.description}:
                 </strong>
-                <p style={{ margin: 0, lineHeight: 1.6 }}>{design.description}</p>
+                <p style={{ margin: 0, lineHeight: 1.6 }}>
+                  {design.description}
+                </p>
               </div>
             )}
 
             {design.tags.length > 0 && (
               <div style={{ marginBottom: theme.spacing.lg }}>
-                <strong style={{ color: theme.colors.textSecondary, display: "block", marginBottom: theme.spacing.sm }}>
+                <strong
+                  style={{
+                    color: theme.colors.textSecondary,
+                    display: "block",
+                    marginBottom: theme.spacing.sm,
+                  }}
+                >
                   {t.designs.tags}:
                 </strong>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: theme.spacing.xs }}>
+                <div
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: theme.spacing.xs,
+                  }}
+                >
                   {design.tags.map((tag) => (
                     <Tag key={tag} label={tag} />
                   ))}
@@ -379,11 +476,22 @@ export function DesignDetail({ id }: DesignDetailProps) {
                   marginBottom: theme.spacing.xs,
                 }}
               >
-                <strong style={{ color: theme.colors.textSecondary, fontSize: "0.875rem" }}>
+                <strong
+                  style={{
+                    color: theme.colors.textSecondary,
+                    fontSize: "0.875rem",
+                  }}
+                >
                   {t.common.storageLocation || "Storage Location"}:
                 </strong>
-                <Button size="sm" variant="secondary" onClick={handleToggleStoragePath}>
-                  {showStoragePath ? t.common.hide || "Hide" : t.common.show || "Show"}
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={handleToggleStoragePath}
+                >
+                  {showStoragePath
+                    ? t.common.hide || "Hide"
+                    : t.common.show || "Show"}
                 </Button>
               </div>
               {showStoragePath && storagePath && (
@@ -402,7 +510,11 @@ export function DesignDetail({ id }: DesignDetailProps) {
               )}
               {showStoragePath && storagePath && window.electronAPI && (
                 <div style={{ width: "100%" }}>
-                  <Button size="sm" variant="secondary" onClick={handleOpenStorageFolder}>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={handleOpenStorageFolder}
+                  >
                     {t.common.openFolder || "Open Folder"}
                   </Button>
                 </div>
@@ -410,7 +522,9 @@ export function DesignDetail({ id }: DesignDetailProps) {
             </div>
 
             <div style={{ display: "flex", gap: theme.spacing.sm }}>
-              <Button onClick={() => setView({ type: "design-edit", id })}>{t.common.edit}</Button>
+              <Button onClick={() => setView({ type: "design-edit", id })}>
+                {t.common.edit}
+              </Button>
               <Button variant="danger" onClick={handleDelete}>
                 {t.common.delete}
               </Button>
@@ -434,14 +548,28 @@ export function DesignDetail({ id }: DesignDetailProps) {
                 marginBottom: theme.spacing.md,
               }}
             >
-              <h3 style={{ margin: 0, fontSize: "1.125rem", fontWeight: "600" }}>{t.designs.linkedPatterns}</h3>
-              <Button size="sm" variant="secondary" onClick={handleOpenLinkDialog}>
+              <h3
+                style={{ margin: 0, fontSize: "1.125rem", fontWeight: "600" }}
+              >
+                {t.designs.linkedPatterns}
+              </h3>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={handleOpenLinkDialog}
+              >
                 {t.designs.linkPatterns}
               </Button>
             </div>
 
             {linkedPatterns.length > 0 ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: theme.spacing.sm }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: theme.spacing.sm,
+                }}
+              >
                 {linkedPatterns.map((pattern) => (
                   <div
                     key={pattern.id}
@@ -451,24 +579,48 @@ export function DesignDetail({ id }: DesignDetailProps) {
                       borderRadius: theme.borderRadius.md,
                       cursor: "pointer",
                     }}
-                    onClick={() => setView({ type: "pattern-detail", id: pattern.id })}
+                    onClick={() =>
+                      setView({ type: "pattern-detail", id: pattern.id })
+                    }
                   >
-                    <div style={{ fontWeight: "600", marginBottom: theme.spacing.xs }}>{pattern.name}</div>
-                    <div style={{ fontSize: "0.875rem", color: theme.colors.textSecondary }}>
-                      {t.garmentTypes[pattern.garmentType]} • {t.lengthTypes[pattern.length]}
+                    <div
+                      style={{
+                        fontWeight: "600",
+                        marginBottom: theme.spacing.xs,
+                      }}
+                    >
+                      {pattern.name}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "0.875rem",
+                        color: theme.colors.textSecondary,
+                      }}
+                    >
+                      {t.garmentTypes[pattern.garmentType]} •{" "}
+                      {pattern.length
+                        ? t.lengthTypes[pattern.length]
+                        : t.common.none}
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <p style={{ color: theme.colors.textMuted }}>{t.designs.noLinkedPatterns}</p>
+              <p style={{ color: theme.colors.textMuted }}>
+                {t.designs.noLinkedPatterns}
+              </p>
             )}
           </div>
         </div>
       </div>
 
       {/* Lightbox */}
-      {lightboxImage && <Lightbox imagePath={lightboxImage} onClose={() => setLightboxImage(null)} />}
+      {lightboxImage && (
+        <Lightbox
+          imagePath={lightboxImage}
+          onClose={() => setLightboxImage(null)}
+        />
+      )}
 
       {/* Link Patterns Dialog */}
       {showLinkDialog && (
@@ -529,8 +681,16 @@ export function DesignDetail({ id }: DesignDetailProps) {
                   />
                   <div>
                     <div style={{ fontWeight: "600" }}>{pattern.name}</div>
-                    <div style={{ fontSize: "0.875rem", color: theme.colors.textSecondary }}>
-                      {t.garmentTypes[pattern.garmentType]} • {t.lengthTypes[pattern.length]}
+                    <div
+                      style={{
+                        fontSize: "0.875rem",
+                        color: theme.colors.textSecondary,
+                      }}
+                    >
+                      {t.garmentTypes[pattern.garmentType]} •{" "}
+                      {pattern.length
+                        ? t.lengthTypes[pattern.length]
+                        : t.common.none}
                     </div>
                   </div>
                 </label>
@@ -539,7 +699,10 @@ export function DesignDetail({ id }: DesignDetailProps) {
 
             <div style={{ display: "flex", gap: theme.spacing.sm }}>
               <Button onClick={handleSaveLinks}>{t.common.save}</Button>
-              <Button variant="secondary" onClick={() => setShowLinkDialog(false)}>
+              <Button
+                variant="secondary"
+                onClick={() => setShowLinkDialog(false)}
+              >
                 {t.common.cancel}
               </Button>
             </div>
@@ -547,5 +710,5 @@ export function DesignDetail({ id }: DesignDetailProps) {
         </div>
       )}
     </div>
-  )
+  );
 }
